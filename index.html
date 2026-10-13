@@ -1,1 +1,118 @@
-test
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Annabelle's Wend</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F3F7FC;--ink:#0B2A6F;--mute:#4D6491;--cell:#fff;--line:#C9D6EA;--block:#D3D9E3;--sel:#F59E2E;--selink:#fff;--panel:#E4ECF8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0A1630;--ink:#DCE9FF;--mute:#8FA6D1;--cell:#152a52;--line:#24407A;--block:#07101F;--panel:#12244A}}
+:root[data-theme="dark"]{--bg:#0A1630;--ink:#DCE9FF;--mute:#8FA6D1;--cell:#152a52;--line:#24407A;--block:#07101F;--panel:#12244A}
+*,*:before,*:after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent}
+main{max-width:460px;margin:0 auto;padding:18px 16px 40px}
+h1{font-size:30px;line-height:1.1;margin:6px 0 4px;font-weight:800;letter-spacing:-.02em}
+.sub{margin:0 0 14px;color:var(--mute);font-size:15px;line-height:1.4}
+.tabs{display:flex;gap:6px;margin-bottom:16px;background:var(--panel);padding:4px;border-radius:999px}
+.tabs button{flex:1;border:0;background:none;color:var(--mute);font:700 14px Figtree,sans-serif;padding:9px;border-radius:999px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+button:focus-visible{outline:3px solid var(--sel);outline-offset:2px}
+.board{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;width:100%;touch-action:none;user-select:none;-webkit-user-select:none}
+.c{aspect-ratio:1;display:grid;place-items:center;border-radius:9px;background:var(--cell);border:1.5px solid var(--line);font-weight:800;font-size:clamp(18px,6vw,26px);transition:background .12s,transform .12s}
+.c.b{background:var(--block);border-color:transparent}
+.c.sel{background:var(--sel);border-color:var(--sel);color:var(--selink);transform:scale(1.04)}
+.c.hint{animation:p .6s ease-in-out 3}
+@keyframes p{50%{box-shadow:0 0 0 5px var(--sel)}}
+.board.shake{animation:s .3s}
+@keyframes s{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.cur{min-height:34px;display:flex;gap:3px;justify-content:center;margin:0 0 12px}
+.pill{background:var(--sel);color:#fff;font-weight:800;font-size:14px;width:26px;height:30px;display:grid;place-items:center;border-radius:5px}
+.msg{min-height:20px;text-align:center;color:var(--mute);font-size:14px;margin:10px 0}
+.slots{display:grid;gap:5px;margin:14px 0}
+.row{display:flex;gap:4px}
+.s{width:22px;height:22px;border-radius:4px;background:var(--panel);display:grid;place-items:center;font-size:12px;font-weight:800}
+.ctl{display:flex;gap:10px;margin-top:6px}
+.ctl button,.pbtn{flex:1;border:1.5px solid var(--ink);background:none;color:var(--ink);font:700 15px Figtree,sans-serif;padding:11px;border-radius:999px;cursor:pointer}
+.pbtn{background:var(--ink);color:var(--bg);width:100%;margin-top:18px}
+.win{display:none;background:var(--ink);color:var(--bg);border-radius:16px;padding:18px;margin-top:16px;text-align:center}
+.win.on{display:block}.win b{display:block;font-size:22px;margin-bottom:6px}
+.win button{margin-top:12px;border:0;background:var(--bg);color:var(--ink);font:700 14px Figtree,sans-serif;padding:10px 18px;border-radius:999px;cursor:pointer}
+details{margin-top:14px;color:var(--mute);font-size:14px;line-height:1.5}summary{cursor:pointer;font-weight:700;color:var(--ink)}
+#print{display:none}#print.on{display:block}
+.sheet{text-align:center}.sheet h2{font-size:34px;margin:4px 0;letter-spacing:-.02em}
+.key{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:16px}
+.key span{padding:5px 12px;border-radius:999px;font-weight:800;font-size:13px}
+@media print{
+ @page{margin:14mm}
+ :root{--bg:#fff;--ink:#0B2A6F;--cell:#fff;--line:#C9D6EA;--block:#D3D9E3;padding:0}
+ body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .tabs,.pbtn,#play,.noprint{display:none!important}#print{display:block!important}
+ main{max-width:none;padding:0}.sheet .board{max-width:150mm;margin:8mm auto}
+ .sheet h2{font-size:30pt}
+}
+</style></head><body><main>
+<h1>Annabelle's Wend</h1>
+<p class="sub noprint">Connect letters to find 8 hidden words. Every letter is used exactly once.</p>
+
+<section id="play">
+ <div class="cur" id="cur"></div>
+ <div class="board" id="board"></div>
+ <div class="msg" id="msg" aria-live="polite"></div>
+ <div class="slots" id="slots"></div>
+ <div class="ctl"><button id="undo">Undo</button><button id="hint">Hint</button></div>
+ <div class="win" id="win"><b>Happy birthday, Annabelle</b>You found every word.</div>
+ <details><summary>How to play</summary>Drag across touching letters (up, down, left, right) to spell a word, or tap them one at a time. Words are different lengths, and no letter is left over. Undo removes your last letter, or your last found word.</details>
+</section>
+
+</main>
+<script>
+const D={"words": ["ANNABELLE", "LOBSTER", "CHRIS", "TWENTY", "BIRDS", "MOTHS", "FIVE", "RAT"], "grid": [[{"l": "S", "w": 4, "k": 4}, {"l": "D", "w": 4, "k": 3}, null, null, {"l": "S", "w": 1, "k": 3}, {"l": "B", "w": 1, "k": 2}, {"l": "T", "w": 7, "k": 2}], [{"l": "I", "w": 4, "k": 1}, {"l": "R", "w": 4, "k": 2}, null, null, {"l": "T", "w": 1, "k": 4}, {"l": "O", "w": 1, "k": 1}, {"l": "A", "w": 7, "k": 1}], [{"l": "B", "w": 4, "k": 0}, {"l": "S", "w": 5, "k": 4}, {"l": "E", "w": 0, "k": 8}, {"l": "R", "w": 1, "k": 6}, {"l": "E", "w": 1, "k": 5}, {"l": "L", "w": 1, "k": 0}, {"l": "R", "w": 7, "k": 0}], [{"l": "M", "w": 5, "k": 0}, {"l": "H", "w": 5, "k": 3}, {"l": "L", "w": 0, "k": 7}, {"l": "T", "w": 3, "k": 0}, {"l": "W", "w": 3, "k": 1}, {"l": "E", "w": 3, "k": 2}, {"l": "N", "w": 3, "k": 3}], [{"l": "O", "w": 5, "k": 1}, {"l": "T", "w": 5, "k": 2}, {"l": "L", "w": 0, "k": 6}, {"l": "E", "w": 0, "k": 5}, {"l": "A", "w": 0, "k": 0}, {"l": "Y", "w": 3, "k": 5}, {"l": "T", "w": 3, "k": 4}], [{"l": "S", "w": 2, "k": 4}, {"l": "H", "w": 2, "k": 1}, {"l": "C", "w": 2, "k": 0}, {"l": "B", "w": 0, "k": 4}, {"l": "N", "w": 0, "k": 1}, {"l": "F", "w": 6, "k": 0}, {"l": "I", "w": 6, "k": 1}], [{"l": "I", "w": 2, "k": 3}, {"l": "R", "w": 2, "k": 2}, null, {"l": "A", "w": 0, "k": 3}, {"l": "N", "w": 0, "k": 2}, {"l": "E", "w": 6, "k": 3}, {"l": "V", "w": 6, "k": 2}]]},W=D.words,G=D.grid,N=7;
+const COL=[["#0B2A6F","#fff"],["#1E4FA8","#fff"],["#2F6FD0","#fff"],["#4A8BE0","#fff"],["#6BA3EA","#0B2A6F"],["#8FBCF0","#0B2A6F"],["#B3D2F6","#0B2A6F"],["#D5E6FA","#0B2A6F"]];
+const sol=W.map((w,i)=>{const a=[];G.forEach((row,r)=>row.forEach((x,c)=>{if(x&&x.w===i)a[x.k]=[r,c]}));return a});
+const $=id=>document.getElementById(id),cells={};
+let found=[],path=[],down=false,drag=false;
+function build(el,solved){el.innerHTML="";G.forEach((row,r)=>row.forEach((x,c)=>{const d=document.createElement("div");d.className="c"+(x?"":" b");if(x){d.textContent=x.l;d.dataset.r=r;d.dataset.c=c;if(solved){d.style.background=COL[x.w][0];d.style.color=COL[x.w][1];d.style.borderColor="transparent"}else cells[r+","+c]=d}el.appendChild(d)}))}
+build($("board"),false);
+const order=W.map((w,i)=>i).sort((a,b)=>W[a].length-W[b].length||a-b);
+function paint(){
+ for(const k in cells){const d=cells[k];d.classList.remove("sel");d.style.background="";d.style.color="";d.style.borderColor=""}
+ found.forEach(i=>sol[i].forEach(([r,c])=>{const d=cells[r+","+c];d.style.background=COL[i][0];d.style.color=COL[i][1];d.style.borderColor="transparent"}));
+ path.forEach(([r,c])=>cells[r+","+c].classList.add("sel"));
+ $("cur").innerHTML=path.map(([r,c])=>`<span class="pill">${G[r][c].l}</span>`).join("");
+ $("slots").innerHTML=order.map(i=>{const f=found.includes(i);return `<div class="row">${[...W[i]].map(ch=>`<div class="s" style="${f?`background:${COL[i][0]};color:${COL[i][1]}`:""}">${f?ch:""}</div>`).join("")}</div>`}).join("");
+ $("win").classList.toggle("on",found.length===W.length);
+}
+const cellAt=e=>{const t=document.elementFromPoint(e.clientX,e.clientY);return t&&t.dataset&&t.dataset.r!==undefined?[+t.dataset.r,+t.dataset.c]:null};
+const same=(a,b)=>a[0]===b[0]&&a[1]===b[1],adj=(a,b)=>Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])===1;
+const free=p=>!found.some(i=>sol[i].some(q=>same(q,p)));
+const inPath=p=>path.findIndex(q=>same(q,p));
+function msg(t){$("msg").textContent=t}
+function check(){
+ const s=path.map(([r,c])=>G[r][c].l).join("");
+ for(const i of W.keys()){if(found.includes(i))continue;
+  if(path.length===sol[i].length&&sol[i].every((q,k)=>same(q,path[k]))){found.push(i);path=[];msg(W[i][0]+W[i].slice(1).toLowerCase()+"!");return}}
+ return s;
+}
+function finish(){
+ const s=path.map(([r,c])=>G[r][c].l).join("");
+ if(path.length>1&&W.some((w,i)=>!found.includes(i)&&w===s)){msg("That's a word, but not where it fits. Try another route.");bad()}
+ else if(drag&&path.length>1){bad()}
+}
+function bad(){const b=$("board");b.classList.add("shake");setTimeout(()=>{b.classList.remove("shake");path=[];paint()},300)}
+const B=$("board");
+B.addEventListener("pointerdown",e=>{const p=cellAt(e);if(!p||!G[p[0]][p[1]]||!free(p))return;down=true;drag=false;msg("");B.setPointerCapture(e.pointerId);
+ const k=inPath(p);
+ if(path.length&&k===path.length-1)path.pop();
+ else if(path.length&&k<0&&adj(p,path[path.length-1]))path.push(p);
+ else path=[p];
+ check();paint()});
+B.addEventListener("pointermove",e=>{if(!down)return;const p=cellAt(e);if(!p||!G[p[0]][p[1]]||!free(p)||!path.length)return;
+ const last=path[path.length-1];if(same(p,last))return;
+ if(path.length>1&&same(p,path[path.length-2])){path.pop();drag=true;paint();return}
+ if(adj(p,last)&&inPath(p)<0){path.push(p);drag=true;check();paint()}});
+const up=()=>{if(!down)return;down=false;finish();paint()};
+B.addEventListener("pointerup",up);B.addEventListener("pointercancel",up);
+$("undo").onclick=()=>{msg("");if(path.length)path.pop();else found.pop();paint()};
+$("hint").onclick=()=>{const i=order.find(i=>!found.includes(i));if(i===undefined)return;const d=cells[sol[i][0].join(",")];d.classList.remove("hint");void d.offsetWidth;d.classList.add("hint");msg("A word with "+W[i].length+" letters starts at the highlighted letter.")};
+paint();
+</script></body></html>
