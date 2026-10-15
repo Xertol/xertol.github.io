@@ -107,6 +107,7 @@ summary{cursor:pointer;font-weight:700;color:var(--ink)}
 .mk{position:absolute;transform:translate(-50%,-50%);width:24px;height:24px;border-radius:50%;background:var(--cell);border:2px solid var(--ink);display:grid;place-items:center;font-weight:700;font-size:15px;pointer-events:none;z-index:2}
 #tn .ctl,#ph .ctl{display:flex;gap:10px;margin-top:14px}#tn .ctl button,#ph .ctl button{flex:1;border:1.5px solid var(--ink);background:none;color:var(--ink);font-weight:600;font-size:16px;padding:11px;border-radius:999px;cursor:pointer}
 #phboard{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);aspect-ratio:3/4;border:3px solid var(--ink);border-radius:12px;overflow:hidden;background:var(--panel)}
+#phboard.pk{background-image:var(--img);background-size:100% 100%}#phboard.pk .pt{visibility:hidden}
 .pt{background-image:var(--img);background-size:300% 400%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.7);cursor:pointer}.pt.blank{background:var(--panel);box-shadow:none;cursor:default}
 #fin{display:none;position:fixed;inset:0;z-index:40;background:rgba(5,15,45,.72);align-items:center;justify-content:center;padding:20px}
 .fc{background:var(--bg);color:var(--ink);border-radius:20px;padding:22px;width:100%;max-width:380px;text-align:center}.fc h2{margin:0 0 4px;font-size:26px}.fc p{margin:0 0 14px;color:var(--mute)}
@@ -160,10 +161,10 @@ summary{cursor:pointer;font-weight:700;color:var(--ink)}
 <div class="win" id="twin"><b>Happy birthday, Annabelle</b>Puzzle solved.</div>
 </div>
 <div id="ph">
-<p class="sub">Slide the tiles back into place to rebuild the picture.</p>
+<p class="sub">Tap a tile to slide it, along with any tiles in line with it. Tap Peek to see the full picture.</p>
 <div id="phboard"></div>
 <p class="sub" id="phmv" style="text-align:center;margin-top:10px"></p>
-<div class="ctl"><button id="phnew">Shuffle again</button></div>
+<div class="ctl"><button id="phpk">Peek</button><button id="phnew">Shuffle again</button></div>
 <div class="win" id="pwin"><b>Happy birthday, Annabelle</b>Picture complete.</div>
 </div>
 <div id="fin"></div>
@@ -359,13 +360,13 @@ const $=id=>document.getElementById(id),C=3,N=12,IMG="data:image/jpeg;base64,/9j
 B.style.setProperty("--img",`url(${IMG})`);
 let t=null,moves=0,done=false;
 const nb=p=>{const r=p/C|0,c=p%C,o=[];if(r>0)o.push(p-C);if(r<3)o.push(p+C);if(c>0)o.push(p-1);if(c<C-1)o.push(p+1);return o};
-function shuffle(){t=[...Array(N).keys()];let b=N-1,last=-1;for(let k=0;k<150;k++){const o=nb(b).filter(x=>x!==last);const p=o[Math.random()*o.length|0];[t[b],t[p]]=[t[p],t[b]];last=b;b=p}
+function shuffle(){t=[...Array(N).keys()];let b=N-1,last=-1;for(let k=0;k<28;k++){const o=nb(b).filter(x=>x!==last);const p=o[Math.random()*o.length|0];[t[b],t[p]]=[t[p],t[b]];last=b;b=p}
  if(t.every((x,i)=>x===i))return shuffle();moves=0;done=false;$("pwin").classList.remove("on");draw()}
 function draw(){B.innerHTML=t.map((id,p)=>id===N-1&&!done?`<div class="pt blank"></div>`:`<div class="pt" data-p="${p}" style="background-position:${(id%C)/(C-1)*100}% ${(id/C|0)/3*100}%"></div>`).join("");
  $("phmv").textContent="Moves: "+moves;if(done)$("pwin").classList.add("on")}
 B.onclick=e=>{const d=e.target.closest(".pt");if(!d||done||d.classList.contains("blank"))return;const p=+d.dataset.p,b=t.indexOf(N-1);
- if(nb(b).includes(p)){[t[b],t[p]]=[t[p],t[b]];moves++;if(t.every((x,i)=>x===i))done=true;draw()}};
-$("phnew").onclick=shuffle;window.phInit=()=>{if(!t)shuffle()};
+ const pr=p/C|0,pc=p%C,br=b/C|0,bc=b%C;if(pr===br||pc===bc){const d=pr===br?(pc<bc?-1:1):(pr<br?-C:C);for(let q=b;q!==p;q+=d)t[q]=t[q+d];t[p]=N-1;moves++;if(t.every((x,i)=>x===i))done=true;draw()}};
+$("phnew").onclick=shuffle;$("phpk").onclick=()=>{B.classList.add("pk");setTimeout(()=>B.classList.remove("pk"),2500)};window.phInit=()=>{if(!t)shuffle()};
 })();
 (()=>{
 const $=id=>document.getElementById(id);
